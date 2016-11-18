@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
+        begin-transaction="false" require-authentication="false">
+
+    <parameter name="numOrders"/>
+
+    <!-- to go to URL like http://localhost:8080/popc/TestOrders?numOrders=10 -->
+    <!-- some results for place and ship order:
+            txCache around all: 2 orders/sec (0.5 sec/order)
+            txCache on place#Order and ship#OrderPart 1.5: orders/sec (0.67 sec/order) (most realistic scenario)
+            no txCache at all: 0.7 orders/sec (1.4 sec/order)
+    -->
+    <actions>
+        <script><![CDATA[
+            import org.moqui.context.ExecutionContext
+            import org.moqui.context.TransactionFacade
+            import org.moqui.impl.context.ArtifactExecutionInfoImpl
+            import org.moqui.impl.context.TransactionCache
+            ExecutionContext ec = context.ec
+            TransactionFacade tf = ec.getTransaction()
+
+            resultMessages = []
+
+            numOrders = (numOrders ?: 10) as int
+
+            ec.user.loginUser("joe@public.com", "moqui")
+
+            long startTime = System.currentTimeMillis()
+            for (int i = 0; i < numOrders; i++) {
+                if (ec.message.hasError()) break
+                boolean beganTransaction = false
+
+                // boolean beganTransaction = tf.begin()
+                // ec.transaction.initTransactionCache()
+                try {
+                    // ec.user.loginUser("joe@public.com", "moqui")
+
+                    Map addOut1 = ec.service.sync().name("mantle.order.OrderServices.add#OrderProductQuantity")
+                            .parameters([productId:'DEMO_1_1', quantity:1, customerPartyId:customerPartyId,
+                            currencyUomId:currencyUomId, productStoreId:productStoreId]).call()
+
+                    cartOrderId = addOut1.orderId
+                    orderPartSeqId = addOut1.orderPartSeqId
+
+                    ec.service.sync().name("mantle.order.OrderServices.add#OrderProductQuantity")
+                            .parameters([orderId:cartOrderId, orderPartSeqId:orderPartSeqId, productId:'DEMO_3_1',
+                                quantity:1, customerPartyId:customerPartyId, currencyUomId:currencyUomId,
+                                productStoreId:productStoreId]).call()
+                    ec.service.sync().name("mantle.order.OrderServices.add#OrderProductQuantity")
+                            .parameters([orderId:cartOrderId, orderPartSeqId:orderPartSeqId, productId:'DEMO_2_1',
+                                quantity:1, customerPartyId:customerPartyId, currencyUomId:currencyUomId,
+                                productStoreId:productStoreId]).call()
+
+                    ec.service.sync().name("mantle.order.OrderServices.set#OrderBillingShippingInfo")
+                            .parameters([orderId:cartOrderId, paymentMethodId:'CustJqpCc', shippingPostalContactMechId:'CustJqpAddr',
+                                shippingTelecomContactMechId:'CustJqpTeln', shipmentMethodEnumId:'ShMthNoShipping',
+                                carrierPartyId:'_NA_']).call()
+
+                    ec.service.sync().name("mantle.order.OrderServices.place#Order").parameters([orderId:cartOrderId]).call()
+
+                    // ec.user.logoutUser()
+                    // ec.user.loginUser("john.doe", "moqui")
+
+                    ec.service.sync().name("mantle.shipment.ShipmentServices.ship#OrderPart")
+                            .parameters([orderId:cartOrderId, orderPartSeqId:orderPartSeqId]).call()
+
+                    // ec.user.logoutUser()
+
+                    resultMessages.add("[${i+1}/${numOrders} - ${System.currentTimeMillis() - startTime}] Created order ${cartOrderId}")
+                    ec.logger.info("[${i+1}/${numOrders} - ${System.currentTimeMillis() - startTime}] Created order ${cartOrderId}")
+                } catch (Throwable t) {
+                    tf.rollback(beganTransaction, "Error running test", t)
+                    ec.logger.warn("Error running test" + t.toString())
+                } finally {
+                    if (beganTransaction && tf.isTransactionInPlace()) {
+                        tf.commit()
+                    }
+                }
+            }
+            long endTime = System.currentTimeMillis()
+            double seconds = (endTime - startTime)/1000
+            resultMessages.add("Created and placed ${numOrders} in ${seconds} seconds, ${numOrders/seconds} orders per second")
+
+            def artifactHistory = ec.artifactExecution.history
+            ownHotSpotList = ArtifactExecutionInfoImpl.hotSpotByTime(artifactHistory, true, "-time")
+            totalHotSpotList = ArtifactExecutionInfoImpl.hotSpotByTime(artifactHistory, false, "-time")
+
+            List<Map> consolidatedList = ArtifactExecutionInfoImpl.consolidateArtifactInfo(artifactHistory)
+            printedArtifactInfo = ArtifactExecutionInfoImpl.printArtifactInfoList(consolidatedList)
+        ]]></script>
+    </actions>
+    <widgets>
+        <section-iterate name="ResultSection" list="resultMessages" entry="resultMessage">
+            <widgets><label text="${resultMessage}" type="p"/></widgets>
+        </section-iterate>
+        <label text="Artifacts by Own Time" type="h3"/>
+        <form-list name="OwnHotSpots" list="ownHotSpotList" skip-form="true">
+            <field name="time"><default-field><display/></default-field></field>
+            <field name="timeMin"><default-field><display/></default-field></field>
+            <field name="timeAvg"><default-field><display text="${time/count}" format="0.##"/></default-field></field>
+            <field name="timeMax"><default-field><display/></default-field></field>
+            <field name="count"><default-field><display/></default-field></field>
+            <field name="name"><default-field><display/></default-field></field>
+            <field name="type"><default-field><display/></default-field></field>
+            <field name="action"><default-field><display/></default-field></field>
+            <field name="actionDetail"><default-field><display/></default-field></field>
+        </form-list>
+        <label text="Artifacts by Own plus Children Time" type="h3"/>
+        <form-list name="TotalHotSpots" list="totalHotSpotList" skip-form="true">
+            <field name="time"><default-field><display/></default-field></field>
+            <field name="timeMin"><default-field><display/></default-field></field>
+            <field name="timeAvg"><default-field><display text="${time/count}" format="0.##"/></default-field></field>
+            <field name="timeMax"><default-field><display/></default-field></field>
+            <field name="count"><default-field><display/></default-field></field>
+            <field name="name"><default-field><display/></default-field></field>
+            <field name="type"><default-field><display/></default-field></field>
+            <field name="action"><default-field><display/></default-field></field>
+            <field name="actionDetail"><default-field><display/></default-field></field>
+        </form-list>
+        <label text="Consolidated Artifacts Tree" type="h3"/>
+        <label text="${printedArtifactInfo}" encode="true" type="pre"/>
+    </widgets>
+</screen>

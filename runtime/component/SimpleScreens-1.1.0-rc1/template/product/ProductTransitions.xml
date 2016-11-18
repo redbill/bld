@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd">
+
+    <transition name="getProductList">
+        <parameter name="term"/>
+        <parameter name="productFeatureIds"/>
+        <parameter name="indexName"/>
+        <parameter name="documentType"/>
+        <actions>
+            <set field="indexName" from="indexName ?: searchIndexName ?: 'mantle'"/>
+            <set field="documentType" from="documentType ?: searchProductDocType ?: 'MantleProduct'"/>
+            <!-- <log message="====== getProductList indexName=${indexName}, documentType=${documentType}, term=${term}"/> -->
+
+            <entity-find-one entity-name="mantle.product.Product" value-field="product">
+                <field-map field-name="productId" from="term"/></entity-find-one>
+
+            <if condition="product != null"><then>
+                <script>
+                    def outList = [[value:product.productId, label:ec.resource.expand("ProductNameTemplate", "", product)]]
+                    ec.web.sendJsonResponse(outList)
+                </script>
+            </then><else>
+                <script><![CDATA[
+                    StringBuilder termSb = new StringBuilder()
+                    termSb.append(term).append('*')
+                    if (productFeatureIds) {
+                        List productFeatureIdList = productFeatureIds.split(',')
+                        // NOTE: using features.productFeatureId instead of plain productFeatureId as newer ElasticSearch doesn't search in nested fields
+                        termSb.append(' AND features.productFeatureId:')
+                        if (productFeatureIdList.size() > 1) termSb.append('(')
+                        for (int i = 0; i < productFeatureIdList.size(); i++) {
+                            termSb.append(productFeatureIdList.get(i))
+                            if (i < (productFeatureIdList.size() - 1)) termSb.append(' OR ')
+                        }
+                        if (productFeatureIdList.size() > 1) termSb.append(')')
+                    }
+                ]]></script>
+                <!-- <log level="warn" message="Doing product search with queryString [${termSb.toString()}]"/> -->
+                <service-call name="org.moqui.search.SearchServices.search#DataDocuments" out-map="context"
+                        in-map="[queryString:termSb.toString(), indexName:indexName, documentType:documentType]"/>
+                <!-- <log level="warn" message="Got product search results: ${documentList}"/> -->
+                <script>
+                    def outList = []
+                    for (def document in documentList)
+                        outList.add([value:document._id, label:ec.resource.expand("ProductNameTemplate", "", [productName:document.name,productId:document._id,pseudoId:document.pseudoId])])
+                    ec.web.sendJsonResponse(outList)
+                </script>
+            </else></if>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getProductPrice">
+        <parameter name="productId" required="true"/><parameter name="quantity"/>
+        <parameter name="priceUomId"/><parameter name="pricePurposeEnumId"/>
+        <parameter name="productStoreId"/><parameter name="vendorPartyId"/><parameter name="customerPartyId"/>
+        <!-- use these to get store, vendor, customer, uom from OrderHeader/Part -->
+        <parameter name="orderId"/><parameter name="orderPartSeqId"/>
+        <actions>
+            <service-call name="mantle.product.PriceServices.get#OrderProductPrice" in-map="context" out-map="priceOut"/>
+            <script>ec.web.sendTextResponse(ec.l10n.format(priceOut.price, '#,##0.000'))</script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getProductAmount">
+        <!-- Return base amount and uom for a product -->
+        <parameter name="productId" required="true"/>
+        <actions>
+            <entity-find-one entity-name="mantle.product.Product" value-field="product"/>
+            <if condition="product">
+                <set field="uom" from="product?.amountUom"/>
+                <set field="pantMap" from="[:]"/>
+                <script>
+                    pantMap.putAll(product)
+                    pantMap.putAll(uom)
+                    ec.web.sendTextResponse(ec.resource.expand("ProductAmountNameTemplate", '', pantMap))
+                </script>
+            </if>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <transition name="getAssetList">
+        <parameter name="term"/>
+        <parameter name="facilityId"/>
+        <parameter name="ownerPartyId"/>
+        <parameter name="assetTypeEnumId"/>
+        <parameter name="classEnumId"/>
+        <parameter name="assetOrderBy"/>
+        <actions>
+            <entity-find entity-name="mantle.product.asset.AssetFindView" list="assetList" limit="20">
+                <econdition field-name="facilityId" ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+                <econdition field-name="assetTypeEnumId" ignore-if-empty="true"/>
+                <econdition field-name="classEnumId" ignore-if-empty="true"/>
+                <econditions combine="or">
+                    <econdition field-name="assetId" operator="like" value="%${term}%" ignore-case="true"/>
+                    <econdition field-name="assetName" operator="like" value="%${term}%" ignore-case="true"/>
+                    <econdition field-name="pseudoId" operator="like" value="%${term}%" ignore-case="true"/>
+                    <econdition field-name="productName" operator="like" value="%${term}%" ignore-case="true"/>
+                </econditions>
+                <select-field field-name="assetId,assetName,pseudoId,productName"/>
+                <order-by field-name="${assetOrderBy ?: '-receivedDate'}"/>
+            </entity-find>
+            <script>
+                def outList = []
+                for (def asset in assetList)
+                    outList.add([value:asset.assetId, label:"${ec.resource.expand('AssetNameTemplate','',asset)} - ${ec.resource.expand('ProductNameTemplate','',asset)}".toString()])
+                ec.web.sendJsonResponse(outList)
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getAssetAmount">
+        <!-- Return base amount and uom for product on an asset -->
+        <parameter name="assetId" required="true"/>
+        <actions>
+            <entity-find-one entity-name="mantle.product.asset.Asset" value-field="asset"/>
+            <if condition="asset">
+                <set field="productId" from="asset.productId"/>
+                <entity-find-one entity-name="mantle.product.Product" value-field="product"/>
+                <if condition="product">
+                    <set field="uom" from="product?.amountUom"/>
+                    <set field="pantMap" from="[:]"/>
+                    <script>
+                        pantMap.putAll(product)
+                        pantMap.putAll(uom)
+                        ec.web.sendTextResponse(ec.resource.expand("ProductAmountNameTemplate", '', pantMap))
+                    </script>
+                </if>
+            </if>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getAssetAvailableToPromiseTotal">
+        <parameter name="assetId" required="true"/>
+        <actions>
+            <entity-find-one entity-name="mantle.product.asset.Asset" value-field="asset"/>
+            <if condition="asset">
+                <script>ec.web.sendTextResponse(ec.l10n.format(asset.availableToPromiseTotal, null))</script>
+            </if>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <widgets/>
+</screen>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
+        require-authentication="true">
+
+    <transition name="placeOrder">
+        <actions>
+            <service-call name="mantle.order.OrderServices.place#Order" in-map="[orderId:cartOrderId]"/>
+            <script>ec.web.sessionAttributes.remove("cartOrderId")</script>
+        </actions>
+        <default-response url="../../Customer/OrderDetail"><parameter name="orderId" from="cartOrderId"/></default-response>
+    </transition>
+
+    <pre-actions>
+        <set field="html_title" value="Review Order #${cartOrderId}"/>
+    </pre-actions>
+    <actions>
+        <service-call name="mantle.order.OrderServices.get#OrderDisplayInfo" in-map="[orderId:cartOrderId]" out-map="context"/>
+    </actions>
+    <widgets>
+        <!-- NOTE: this section-iterate is the same as on OrderDetail.xml -->
+        <section-iterate name="order-part-section" list="orderPartInfoList" entry="orderPartInfo">
+            <actions><set field="contactInfo" from="orderPartInfo"/></actions>
+            <widgets>
+                <container-panel id="order-panel-${orderPartInfo.orderPart.orderPartSeqId}">
+                    <panel-left>
+                        <label text="Order Part ${orderPartInfo.orderPart.orderPartSeqId}" type="strong"/>
+                        <label text="Part Total ${ec.l10n.formatCurrency(orderHeader?.grandTotal ?: 0, orderHeader?.currencyUomId)}" type="p"/>
+
+                        <!-- shipping info -->
+                        <label text="${orderPartInfo.shipmentMethodEnum?.description ?: ''}" type="p"/>
+                        <widgets><render-mode><text type="html" location="component://SimpleScreens/template/party/ContactInfo.html.gstring"/></render-mode></widgets>
+                    </panel-left>
+                    <panel-center>
+                        <!-- payment info -->
+                        <section-iterate name="payment-info" list="orderPartInfo.partPaymentInfoList" entry="partPaymentInfo">
+                            <actions>
+                                <set field="contactInfo" from="partPaymentInfo"/>
+                                <set field="cardNumber" from="partPaymentInfo.creditCard?.cardNumber"/>
+                                <set field="cardNumber" from="cardNumber ? (partPaymentInfo.creditCard.creditCardTypeEnumId == 'CctAmericanExpress' ? '***********' : '************') + cardNumber.substring(cardNumber.length() - 4, cardNumber.length()) : ''"/>
+                            </actions>
+                            <widgets>
+                                <label text="${partPaymentInfo.paymentMethodTypeEnum?.description}" type="p"/>
+                                <label text="${ec.l10n.formatCurrency(partPaymentInfo.partPayment.amount, partPaymentInfo.partPayment.amountUomId)}" type="p"/>
+
+                                <label text="${partPaymentInfo.paymentMethod?.firstNameOnAccount} ${partPaymentInfo.paymentMethod?.lastNameOnAccount}" type="p"/>
+                                <label text="${partPaymentInfo.creditCardTypeEnum?.description} ${cardNumber} ${partPaymentInfo.creditCard?.expireDate}" type="p"/>
+
+                                <widgets><render-mode><text type="html" location="component://SimpleScreens/template/party/ContactInfo.html.gstring"/></render-mode></widgets>
+                            </widgets>
+                        </section-iterate>
+                    </panel-center>
+                    <panel-footer>
+                        <form-list name="OrderItems" list="orderPartInfo.partOrderItemList" list-entry="orderItem" skip-form="true">
+                            <row-actions>
+                                <service-call name="mantle.order.OrderServices.get#OrderItemTotal" in-map="[orderItem:orderItem]" out-map="orderItemTotalOut"/>
+                                <script>context.putAll(orderItem)</script>
+                            </row-actions>
+                            <field name="itemTypeEnumId"><default-field title="Type">
+                                <display-entity entity-name="moqui.basic.Enumeration" key-field-name="enumId" text="${description}"/>
+                            </default-field></field>
+                            <field name="description"><default-field title="Description">
+                                <display text="${itemDescription} ${productId ? '[' + productId + ']' : ''}"/>
+                                <!-- <display-entity entity-name="Product" text="${productName} [${productId}]" also-hidden="false"/> -->
+                            </default-field></field>
+                            <field name="unitAmount"><default-field><display currency-unit-field="orderHeader.currencyUomId"/></default-field></field>
+                            <field name="quantity"><default-field><display/></default-field></field>
+                            <field name="itemTotal" from="orderItemTotalOut.itemTotal"><default-field>
+                                <display currency-unit-field="orderHeader.currencyUomId" also-hidden="false"/>
+                            </default-field></field>
+                        </form-list>
+                    </panel-footer>
+                </container-panel>
+
+            </widgets>
+        </section-iterate>
+
+        <label text="Order Total: ${ec.l10n.formatCurrency(orderHeader?.grandTotal ?: 0, orderHeader?.currencyUomId)}" type="h3"/>
+
+        <container>
+            <link text="Place Order" link-type="hidden-form" url="placeOrder"/>
+        </container>
+    </widgets>
+</screen>

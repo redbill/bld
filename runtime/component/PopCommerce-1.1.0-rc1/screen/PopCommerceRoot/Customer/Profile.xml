@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
+        require-authentication="true">
+
+    <transition name="updateUser"><service-call name="mantle.party.PartyServices.update#Account" in-map="context"/>
+        <default-response url="."/></transition>
+    <transition name="changePassword"><service-call name="org.moqui.impl.UserServices.update#Password"/>
+        <default-response url="."/><error-response url="."/></transition>
+
+    <transition name="updateContactInfo"><default-response url="UpdateContactInfo"/></transition>
+    <transition name="removeContactInfo"><service-call name="mantle.party.ContactServices.delete#PartyContactMech"/>
+        <default-response url="."/></transition>
+
+    <transition name="updatePaymentMethodInfo"><default-response url="UpdatePaymentMethodInfo"/></transition>
+    <transition name="removePaymentMethod"><service-call name="mantle.account.PaymentMethodServices.delete#PaymentMethod"/>
+        <default-response url="."/></transition>
+
+    <actions>
+        <set field="partyId" from="ec.user.userAccount.partyId"/>
+        <entity-find-one entity-name="PersonAndUserAccount" value-field="personAndUserAccount"/>
+        <service-call name="mantle.party.ContactServices.get#PrimaryEmailAddress" out-map="primaryEmail"
+                in-map="[partyId:partyId]"/>
+
+        <!-- TODO: limit to locales for store? -->
+        <set field="localeStringList" from="[]"/>
+        <iterate list="Locale.getAvailableLocales()" entry="lcl"><script>localeStringList.add([locale:lcl.toString(), name:lcl.getDisplayName(ec.user.locale)])</script></iterate>
+        <order-map-list list="localeStringList"><order-by field-name="name"/></order-map-list>
+    </actions>
+    <widgets>
+        <container style="row">
+            <container style="col-lg-5">
+                <container-dialog id="change-password" button-text="Change Password">
+                    <form-single name="ChangePasswordForm" transition="changePassword">
+                        <field name="oldPassword"><default-field><password size="20"/></default-field></field>
+                        <field name="newPassword"><default-field><password size="20"/></default-field></field>
+                        <field name="newPasswordVerify"><default-field><password size="20"/></default-field></field>
+                        <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+                <form-single name="EditUser" transition="updateUser" map="personAndUserAccount">
+                    <field name="partyId"><default-field><hidden/></default-field></field>
+                    <field name="userId"><default-field><hidden/></default-field></field>
+                    <field name="username"><default-field><text-line size="20"/></default-field></field>
+                    <field name="firstName"><default-field><text-line size="15"/></default-field></field>
+                    <field name="middleName"><default-field><text-line size="15"/></default-field></field>
+                    <field name="lastName"><default-field><text-line size="15"/></default-field></field>
+                    <field name="emailAddress" from="primaryEmail.emailAddress"><default-field><text-line size="40"/></default-field></field>
+
+                    <field name="locale"><default-field>
+                        <drop-down allow-empty="true"><list-options list="localeStringList" key="${locale}" text="${name}"/></drop-down>
+                    </default-field></field>
+                    <field name="timeZone"><default-field>
+                        <!-- TODO: limit time zones for store? -->
+                        <drop-down allow-empty="true"><list-options list="new TreeSet(TimeZone.getAvailableIDs().collect())"/></drop-down>
+                    </default-field></field>
+
+                    <field name="submitButton"><default-field title="Save"><submit/></default-field></field>
+                </form-single>
+            </container>
+            <container style="col-lg-7">
+                <section name="BillingSection">
+                    <actions>
+                        <service-call name="mantle.account.PaymentMethodServices.get#PartyPaymentMethodInfoList"
+                                in-map="[partyId:partyId]" out-map="cciOut"/>
+                    </actions>
+                    <widgets>
+                        <container-box>
+                            <box-header><label text="Billing Information" type="h5"/></box-header>
+                            <box-toolbar>
+                                <dynamic-dialog id="CreateCreditCardDialog" button-text="Create Credit Card"
+                                        transition="updatePaymentMethodInfo" width="800"
+                                        parameter-map="[partyId:partyId, paymentMethodTypeEnumId:'PmtCreditCard']"/>
+                            </box-toolbar>
+                            <box-body>
+                                <container style="float-box" type="ul">
+                                    <section-iterate name="BillingInfoSection" list="cciOut.methodInfoList" entry="methodInfo">
+                                        <widgets>
+                                            <container type="li">
+                                                <render-mode><text type="html" location="component://SimpleScreens/template/party/PaymentMethodInfo.html.gstring"/></render-mode>
+                                                <dynamic-dialog id="UpdatePaymentMethodDialog" button-text="Update"
+                                                        transition="updatePaymentMethodInfo" width="800"
+                                                        parameter-map="[partyId:partyId, paymentMethodId:methodInfo.paymentMethodId]"/>
+                                                <link url="removePaymentMethod" text="Remove"
+                                                        parameter-map="[paymentMethodId:methodInfo.paymentMethodId]"/>
+                                            </container>
+                                        </widgets>
+                                    </section-iterate>
+                                </container>
+                            </box-body>
+                        </container-box>
+                    </widgets>
+                </section>
+
+                <section name="ShippingSection">
+                    <actions>
+                        <service-call name="mantle.party.ContactServices.get#PartyContactInfoList" out-map="shippingContactListInfo"
+                                in-map="[partyId:partyId, postalContactMechPurposeId:'PostalShippingDest',
+                                    telecomContactMechPurposeId:'PhoneShippingDest']"/>
+                    </actions>
+                    <widgets>
+                        <container-box>
+                            <box-header><label text="Shipping Information" type="h5"/></box-header>
+                            <box-toolbar>
+                                <dynamic-dialog id="UpdatePostalInfo" button-text="Add Shipping Info"
+                                        transition="updateContactInfo" width="800"
+                                        parameter-map="[partyId:partyId, postalContactMechPurposeId:'PostalShippingDest',
+                                            telecomContactMechPurposeId:'PhoneShippingDest']"/>
+                            </box-toolbar>
+                            <box-body>
+                                <container style="float-box" type="ul">
+                                    <section-iterate name="ShippingAddressList" list="shippingContactListInfo.postalAddressList" entry="postalAddressInfo">
+                                        <actions><set field="contactInfo" from="postalAddressInfo"/></actions>
+                                        <widgets>
+                                            <container type="li">
+                                                <render-mode><text type="html" location="component://SimpleScreens/template/party/ContactInfo.html.gstring"/></render-mode>
+                                                <dynamic-dialog id="UpdatePostalInfo" button-text="Update"
+                                                        transition="updateContactInfo" width="800"
+                                                        parameter-map="[partyId:partyId, postalContactMechId:contactInfo.postalContactMechId,
+                                                                postalContactMechPurposeId:contactInfo.postalContactMechPurposeId]"/>
+                                                <link url="removeContactInfo" text="Remove"
+                                                        parameter-map="[partyId:partyId, contactMechId:contactInfo.postalContactMechId,
+                                                            contactMechPurposeId:contactInfo.postalContactMechPurposeId]"/>
+                                            </container>
+                                        </widgets>
+                                    </section-iterate>
+                                </container>
+                            </box-body>
+                        </container-box>
+                    </widgets>
+                </section>
+            </container>
+        </container>
+    </widgets>
+</screen>

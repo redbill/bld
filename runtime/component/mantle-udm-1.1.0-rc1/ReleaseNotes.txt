@@ -1,0 +1,74 @@
+
+Mantle Business Artifacts - Universal Data Model Release Notes
+
+===========================================================================
+Release 1.1.0 - Not Yet Released
+===========================================================================
+
+Mantle Universal Data Model 1.1.0 is a minor new feature release. This
+release is based on Moqui Framework 2.0.0.
+
+The changes in this release are generally minor refinements and cleanups
+plus improvements for agreements, work types, employment, and budgets and
+expense management.
+
+Non Backward Compatible Changes
+
+- Agreement fromPartyId, fromRoleTypeId, toPartyId, toRoleTypeId fields
+  replaced with organization and other (instead of from/to); the Agreement
+  entities are not generally used, but any existing data/code would
+  need to be moved/updated
+- Changed FacilityContent, RequestContent, ProductCategoryContent,
+  and ProductConfigItemContent to use a single PK field like other content
+  entities; these entities are not currently used in services, etc but if
+  used in custom code the code and existing data will need to be updated
+- EmplPosition.exemptFlag replaced by taxExemptEnumId and taxFormId
+
+New Features
+
+- Set many entities to cache=never to avoid overhead of caching where
+  read/write ratio doesn't justify it or where cache could cause issues
+- Agreement and Term improvements
+  - Refined TermType enums
+  - Parties on Agreement are now organization and other instead of from/to
+  - Added AgreementTerm termText and termNumber fields
+  - New Settlement types for day of current or next month
+- Added Enumeration type WorkType and workTypeEnumId to RateAmount,
+  TimeEntry, WorkEffortParty, and replaced emplPositionClassId on
+  WorkEffort work workTypeEnumId; this is useful for defining work types
+  separate from position classes for a generally cleaner model and to
+  better represent how position classes can have many work types
+- Employment Tax Settings
+  - Added Employment.taxFormId to override EmplPosition.taxFormId
+  - Added PayrollAdjustmentExempt entity to configure exemptions based on
+    EmplPosition.taxExemptEnumId
+- Added InvoiceItemDetail to allocate expenses to Assets, Facilities, etc
+- Expanded Budget and related entities to handle common budgeting scenarios
+  such as a budget that parallels GL expense accounts and budgets for
+  Assets and Facilities, and for budgets with a longer time period such as
+  a year with sub-periods such as months within the year
+
+===========================================================================
+Release 1.0.1 - 26 Mar 2016
+===========================================================================
+
+Mantle Universal Data Model 1.0.1 is a minor new feature release.
+
+This release is based on Moqui Framework 1.6.2.
+
+There are only minor changes in this release, including: changes for
+updates in moqui-framework, seed and demo data improvements for project
+management (used in HiveMind, etc), using new install data file type
+(something between seed and demo), some new fields, etc.
+
+===========================================================================
+Release 1.0.0 - 24 Jan 2016
+===========================================================================
+
+Mantle Universal Data Model 1.0.0 is the first release as a component
+repository separate from the other components in Mantle Business Artifacts.
+
+This release is based on Moqui Framework 1.6.1.
+
+The initial code is from Mantle 1.2.0 and has only minor changes but has
+updates for the new Moqui Framework component management features.

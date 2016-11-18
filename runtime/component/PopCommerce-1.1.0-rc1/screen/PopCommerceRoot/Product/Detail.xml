@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
+        default-menu-title="Product Detail" require-authentication="false" allow-extra-path="true">
+
+    <parameter name="productId" required="true"/>
+
+    <transition name="addToCart">
+        <actions>
+            <service-call name="mantle.order.OrderServices.add#OrderProductQuantity" out-map="addOut"
+                    in-map="[orderId:cartOrderId, productId:productId, quantity:quantity, customerPartyId:customerPartyId,
+                        currencyUomId:currencyUomId, productStoreId:productStoreId]"/>
+            <set field="ec.web.sessionAttributes.cartOrderId" from="addOut.orderId"/>
+        </actions>
+        <default-response url="../../Order/Cart"/>
+        <error-response url="."/>
+    </transition>
+
+    <transition name="productReviewList"><default-response url="ProductReviewList"/></transition>
+
+    <transition name="createProductReview">
+        <service-call name="create#mantle.product.ProductReview" web-send-json-response="true"
+                in-map="context + [userId:(ec.user.userId ?: '_NA_'), statusId:'PrvwPending',
+                    postedAnonymous:(ec.user.userId ? 'N' : 'Y'), postedDateTime:ec.user.nowTimestamp]"/>
+        <default-response type="none"/>
+    </transition>
+
+    <pre-actions>
+        <set field="extraPathNameList" from="sri.screenUrlInfo.extraPathNameList"/>
+        <if condition="extraPathNameList &amp;&amp; !productId">
+            <set field="productId" from="extraPathNameList[0]"/></if>
+
+        <entity-find-one entity-name="mantle.product.Product" value-field="product"/>
+        <set field="html_title" from="product?.productName ?: ''"/>
+        <script>html_stylesheets.add("static/rating/star-rating.min.css")</script>
+        <script>footer_scripts.add("static/rating/star-rating.min.js")</script>
+    </pre-actions>
+
+    <actions>
+        <service-call name="mantle.product.PriceServices.get#ProductPrice" out-map="priceMap"
+                in-map="[productId:productId, priceUomId:priceUomId, productStoreId:productStoreId,
+                    vendorPartyId:vendorPartyId, customerPartyId:customerPartyId]"/>
+        <set field="price" from="priceMap?.price"/>
+        <set field="priceUomId" from="priceMap?.priceUomId"/>
+
+        <entity-find-one entity-name="moqui.basic.Enumeration" value-field="productClassEnum">
+            <field-map field-name="enumId" from="product.productClassEnumId"/></entity-find-one>
+
+        <entity-find entity-name="mantle.product.feature.ProductFeatureAndAppl" list="pfaaList">
+            <date-filter/><econdition field-name="productId"/>
+            <econdition field-name="applTypeEnumId" value="PfatStandard"/>
+            <order-by field-name="productFeatureTypeEnumId"/><order-by field-name="description"/>
+        </entity-find>
+
+        <entity-find entity-name="mantle.product.ProductDimensionAndType" list="dimensionList">
+            <econdition field-name="productId"/><order-by field-name="description"/></entity-find>
+    </actions>
+    <widgets>
+        <!-- <label text="${product.productName ?: ''}" type="h2"/> -->
+        <label text="${product.description ?: ''}" type="p"/>
+
+        <form-single name="ProductAddToCartForm" transition="addToCart">
+            <field name="productId"><default-field><hidden/></default-field></field>
+            <field name="price"><default-field title=""><display also-hidden="false" currency-unit-field="priceUomId"/></default-field></field>
+            <field name="quantity"><default-field title=""><text-line size="2" default-value="1"/></default-field></field>
+            <field name="add"><default-field title="Add to Cart"><submit/></default-field></field>
+
+            <field-layout>
+                <field-row-big><field-ref name="price"/><field-ref name="quantity"/><field-ref name="add"/></field-row-big>
+            </field-layout>
+        </form-single>
+
+        <label text="Class: ${productClassEnum.description}" condition="productClassEnum" type="strong"/>
+
+        <container-row><row-col lg="6" md="6">
+            <container-box>
+                <box-header><label text="Features" type="h5"/></box-header>
+                <box-body>
+                    <form-list name="FeaturesForm" list="pfaaList" skip-form="true" skip-header="true">
+                        <field name="productFeatureTypeEnumId"><default-field title="Type">
+                            <display-entity entity-name="moqui.basic.Enumeration"/></default-field></field>
+                        <field name="description"><default-field title="Feature"><display/></default-field></field>
+                    </form-list>
+                </box-body>
+            </container-box>
+        </row-col><row-col lg="6" md="6">
+            <container-box>
+                <box-header><label text="Dimensions" type="h5"/></box-header>
+                <box-body>
+                    <form-list name="DimensionsForm" list="dimensionList" skip-form="true" skip-header="true">
+                        <field name="description"><default-field title="Type"><display/></default-field></field>
+                        <field name="value"><default-field><display/></default-field></field>
+                        <field name="valueUomId"><default-field title="Unit">
+                            <display-entity entity-name="moqui.basic.Uom"/>
+                        </default-field></field>
+                    </form-list>
+                </box-body>
+            </container-box>
+        </row-col></container-row>
+
+        <container-dialog id="AddProductReviewDialog" button-text="Add Review" width="800">
+            <form-single name="AddProductReview" transition="createProductReview" background-submit="true"
+                    background-reload-id="ProductReviewListContainer" background-message="Thanks for submitting review"
+                    background-hide-id="AddProductReviewDialog">
+                <field name="productId"><default-field><hidden/></default-field></field>
+                <field name="productRating"><default-field title="Rating">
+                    <render-mode><text type="html"><![CDATA[
+                       <input name="productRating" id="productRating" value="0" type="number" class="rating" data-min=0 data-max=5 data-step=1 data-size="xs" data-stars=5 data-show-clear="false">
+                       <script language="javascript">$("#productRating").rating();</script>
+                    ]]></text></render-mode>
+                </default-field></field>
+                <field name="productReview"><default-field title="Comments">
+                    <text-area cols="80" rows="10"/></default-field></field>
+                <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <dynamic-container id="ProductReviewListContainer" transition="productReviewList"/>
+
+    </widgets>
+</screen>

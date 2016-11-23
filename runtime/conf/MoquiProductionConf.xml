@@ -8,6 +8,9 @@
     <server-stats stats-skip-condition="pathInfo?.startsWith('/rpc') || pathInfo?.startsWith('/rest') || pathInfo?.startsWith('/status')"/>
 
     <entity-facade crypt-pass="MoquiDefaultPassword:CHANGEME">
-        <!-- add datasource elements here to configure databases -->
+        <datasource group-name="transactional" database-conf-name="mysql" schema-name="">
+            <inline-jdbc jdbc-uri="jdbc:mysql://127.0.0.1:3306/bld?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8"
+                    jdbc-username="root" jdbc-password="8778Kl323."/>
+        </datasource>
     </entity-facade>
 </moqui-conf>

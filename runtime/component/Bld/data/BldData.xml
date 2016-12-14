@@ -16,4 +16,33 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.screen.SubscreensItem screenLocation="component://webroot/screen/webroot.xml"
             subscreenName="bld" menuTitle="便利德" menuIndex="9" menuInclude="N"
             subscreenLocation="component://Bld/screen/BldRoot.xml"/>
+            
+            
+            
+    <!-- Theme Type and Default Theme -->
+    <moqui.basic.Enumeration description="BLD front Theme Type" enumId="STT_BLD" enumTypeId="ScreenThemeType"/>
+    <moqui.screen.ScreenTheme screenThemeId="BLD_DEFAULT" screenThemeTypeEnumId="STT_BLD"
+            description="BLD Default Theme"/>
+    <!-- NOTE: these default resources are from the Moqui default runtime webroot component -->
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="10" resourceTypeEnumId="STRT_STYLESHEET"
+            resourceValue="/lib/jquery/themes/smoothness/theme.css"/>
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="20" resourceTypeEnumId="STRT_STYLESHEET"
+            resourceValue="/css/webroot-theme.css"/>
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="100" resourceTypeEnumId="STRT_HEADER_LOGO"
+            resourceValue="/images/MoquiLogoSmall.png"/>
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="101" resourceTypeEnumId="STRT_SHORTCUT_ICON"
+            resourceValue="/favicon.ico"/>
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="102" resourceTypeEnumId="STRT_BODY_CLASS"
+            resourceValue="bg-light"/>
+
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="110" resourceTypeEnumId="STRT_HEADER_TITLE"
+            resourceValue="POP Commerce"/>
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="50" resourceTypeEnumId="STRT_STYLESHEET"
+            resourceValue="/popc/css/PopcDefault.css"/>
+
+    <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="200" resourceTypeEnumId="STRT_FOOTER_ITEM">
+        <resourceValue><![CDATA[<p><a href="http://www.moqui.org/" target="_blank">${ec.l10n.localize('Built on Moqui Framework ${ec.factory.moquiVersion}')}</a></p>]]></resourceValue>
+    </moqui.screen.ScreenThemeResource>
+    
+    
 </entity-facade-xml>

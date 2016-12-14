@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
-        screen-theme-type-enum-id="STT_POP_COMMERCE" standalone="true"
+        screen-theme-type-enum-id="STT_BLD" standalone="true"
         require-authentication="anonymous-view" >
 
     <always-actions>
@@ -22,8 +22,62 @@ along with this software (see the LICENSE.md file). If not, see
 
    
     <widgets>
-        <render-mode><text type="html" location="component://webroot/screen/includes/Header.html.ftl"/></render-mode>
-			便利德-独立商业评论网站
-        <render-mode><text type="html" location="component://webroot/screen/includes/Footer.html.ftl"/></render-mode>
+        <render-mode>
+            <text type="html" location="component://webroot/screen/includes/Header.html.ftl"/>
+        </render-mode>
+		
+        <container id="wrap">
+            <container id="top">
+
+                <render-mode>
+                    <text type="html" location="component://yfyg/screen/includes/header.html.ftl" no-boundary-comment="true"/>
+
+                </render-mode>
+
+
+
+
+
+
+            </container>
+
+            <!-- <container id="left"></container> -->
+            <container id="content">
+                <!-- <container style="outer"> -->
+                <container style="inner">
+                 
+
+                    <!-- the subscreen goes here -->
+                    <subscreens-active id="yfyg-root"/>
+                </container>
+                <!-- </container> -->
+            </container>
+        </container>
+        <container id="footer" style="Footer">
+            <render-mode><text type="html" template="true"><![CDATA[
+
+                 <nav class="navbar  navbar-fixed-bottom  bg-dark dker"><#--  -->
+  <div class="container-fluid">
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="navbar-collapse " id="bs-example-navbar-collapse-1">
+      <ul class="list-inline row ">
+        <li class="active" style="width:32%"><a href="${sri.buildUrl("/yfyg").url}" class="text-center">首页</a></li>
+       <!--   <li class="active  " style="width:19%"><a href="#" class="text-center">Goods</a></li>
+         <li class="active " style="width:19%"><a href="#" class="text-center">NEW</a></li> -->
+          <li class="active  " style="width:32%"><a href="${sri.buildUrl("/yfyg/Order/Cart").url}" class="text-center">购物车<span class="badge">${itemCount!""}</span></a></li>
+        <li class="active  " style="width:32%"><a href="${sri.buildUrl("/yfyg/Customer/Home").url}"><p class="text-center">我的账号</p></a></a></li>
+      </ul>
+
+
+    </div><!-- /.navbar-collapse -->
+  </div> <!-- container-fluid -->
+</nav><!-- /.navbar -->
+
+                    ]]></text></render-mode>
+        </container>
+	 <render-mode>
+            <text type="html" location="component://webroot/screen/includes/Footer.html.ftl"/>
+        </render-mode>
     </widgets>
 </screen>

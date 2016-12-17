@@ -36,7 +36,7 @@ along with this software (see the LICENSE.md file). If not, see
             resourceValue="bg-light"/>
 
     <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="110" resourceTypeEnumId="STRT_HEADER_TITLE"
-            resourceValue="便利德-只为幸福100倍！"/>
+            resourceValue="便利德  只为幸福100倍！"/>
     <moqui.screen.ScreenThemeResource screenThemeId="BLD_DEFAULT" sequenceNum="50" resourceTypeEnumId="STRT_STYLESHEET"
             resourceValue="/popc/css/PopcDefault.css"/>
 

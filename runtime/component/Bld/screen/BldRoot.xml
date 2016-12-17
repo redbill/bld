@@ -65,12 +65,6 @@ along with this software (see the LICENSE.md file). If not, see
                   <div class="container-fluid">
                     <!-- Brand and toggle get grouped for better mobile display -->
                     <header class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
-                            <span class="sr-only">Toggle navigation</span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
                         <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>
                         <#if headerTitleList?has_content><a href="/bld" class="navbar-title">${headerTitleList?first}</a></#if>
                     </header>
@@ -132,18 +126,24 @@ along with this software (see the LICENSE.md file). If not, see
                <nav class="navbar  navbar-fixed-bottom  bg-dark dker"><#--  -->
 				  <div class="container-fluid">
 				
-				      <!-- Collect the nav links, forms, and other content for toggling -->
-				    <div class="navbar-collapse " id="bs-example-navbar-collapse-1">
-				      <ul class="list-inline row ">
-				        <li class="active" style="width:32%"><a href="${sri.buildUrl("/bld").url}" class="text-center">首页</a></li>
-				       <!--   <li class="active  " style="width:19%"><a href="#" class="text-center">Goods</a></li>
-				         <li class="active " style="width:19%"><a href="#" class="text-center">NEW</a></li> -->
-				          <li class="active  " style="width:32%"><a href="${sri.buildUrl("/bld").url}" class="text-center">分享<span class="badge">${itemCount!""}</span></a></li>
-				        <li class="active  " style="width:32%"><a href="${sri.buildUrl("/bld").url}"><p class="text-center">我</p></a></a></li>
-				      </ul>
+						<style>
+                            .nav-tabs
+                            {
+                                text-align: center;
+                                height: 40px;
+                                line-height: 40px;
+                            }
+                        </style>
+                        <ul class="nav nav-tabs nav-tabs-justified">
+                            <div class="row" align="center">
+                                <div class="col-md-4 col-sm-4 col-xs-4" align="center"><li><a href="${sri.buildUrl("/bld").url}">首页</a></li></div>
+                                <div class="col-md-4 col-sm-4 col-xs-4" align="center"><li><a href="${sri.buildUrl("/bld").url}">分享</a></li></div>
+                                <div class="col-md-4 col-sm-4 col-xs-4" align="center"><li><a href="${sri.buildUrl("/bld").url}">我</a></li></div>
+                            </div>
+                        </ul>
 				
 				
-				    </div><!-- /.navbar-collapse -->
+				
 				  </div> <!-- container-fluid -->
 				</nav><!-- /.navbar -->
               

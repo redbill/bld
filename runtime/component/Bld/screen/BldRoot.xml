@@ -14,7 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
         screen-theme-type-enum-id="STT_BLD" standalone="true"
-        require-authentication="anonymous-view" login-path="/popc/Login">
+        require-authentication="anonymous-view" login-path="/bld/Login">
 
     <always-actions>
     </always-actions>
@@ -123,9 +123,9 @@ along with this software (see the LICENSE.md file). If not, see
                         </style>
                         <div class="nav nav-pills row"  align="center">
                                
+                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">关注</a> 
                                 <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">首页</a> 
-                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">分享</a> 
-                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">我</a> 
+                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld/My").url}">我的</a> 
                         </div>
 				
 				

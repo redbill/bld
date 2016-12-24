@@ -16,6 +16,14 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.screen.SubscreensItem screenLocation="component://webroot/screen/webroot.xml"
             subscreenName="bld" menuTitle="便利德" menuIndex="9" menuInclude="N"
             subscreenLocation="component://Bld/screen/BldRoot.xml"/>
+    
+    
+     <!-- authz/permission for ALL users -->
+    <moqui.security.ArtifactGroup artifactGroupId="BLDF" description="bld front (via root screen)"/>
+    <moqui.security.ArtifactGroupMember artifactGroupId="BLDF" artifactName="component://Bld/screen/BldRoot.xml"
+            artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+    <moqui.security.ArtifactAuthz artifactAuthzId="BLDF_ALL" userGroupId="ALL_USERS" artifactGroupId="BLDF"
+            authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
             
             
             

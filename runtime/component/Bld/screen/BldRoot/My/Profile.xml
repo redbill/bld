@@ -30,19 +30,6 @@ along with this software (see the LICENSE.md file). If not, see
            
           <div class="row">  
 	           <div class="list-group col-xs-12">
-				  <a href="#" class="list-group-item"  style="height:40px">
-				  <p class="text-left col-xs-4">我的任务</p>
-				<p class="text-center  col-xs-6"></p>
-				<p class="text-right glyphicon glyphicon-chevron-right  col-xs-2"></p>
-				  </a>
-				
-				  <a href="#" class="list-group-item "  style="height:40px">
-				  <p class="text-left col-xs-4">创建公司</p>
-				<p class="text-center  col-xs-4"></p>
-				<p class="text-right glyphicon glyphicon-chevron-right  col-xs-4"></p>
-				
-				  </a>
-				
 				  <a href="#" class="list-group-item "  style="height:40px">
 				    <p class="text-left col-xs-4">关于我们</p>
 				    <p class="text-center  col-xs-4"></p>

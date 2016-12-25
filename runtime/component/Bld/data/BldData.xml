@@ -17,6 +17,9 @@ along with this software (see the LICENSE.md file). If not, see
             subscreenName="bld" menuTitle="便利德" menuIndex="9" menuInclude="N"
             subscreenLocation="component://Bld/screen/BldRoot.xml"/>
     
+     <moqui.screen.SubscreensItem screenLocation="component://webroot/screen/webroot/apps.xml"
+            subscreenName="bldadmin" subscreenLocation="component://Bld/screen/BldAdmin.xml"
+            menuTitle="便利德管理后台" menuIndex="20" menuInclude="Y"/>
     
      <!-- authz/permission for ALL users -->
     <moqui.security.ArtifactGroup artifactGroupId="BLDF" description="bld front (via root screen)"/>
@@ -25,7 +28,14 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.security.ArtifactAuthz artifactAuthzId="BLDF_ALL" userGroupId="ALL_USERS" artifactGroupId="BLDF"
             authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
             
-            
+     <!-- authz/permission for ADMIN users -->
+   
+    <!-- HiveMind Admin screens -->
+    <moqui.security.ArtifactGroup artifactGroupId="BLD_ADMIN" description="BLD Admin (via root screen)"/>
+    <moqui.security.ArtifactGroupMember artifactGroupId="BLD_ADMIN" artifactName="component://Bld/screen/BldAdmin.xml"
+            artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+    <moqui.security.ArtifactAuthz artifactAuthzId="BLD_ADM_ADMIN" userGroupId="ADMIN" artifactGroupId="BLD_ADMIN"
+            authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>      
             
     <!-- Theme Type and Default Theme -->
     <moqui.basic.Enumeration description="BLD front Theme Type" enumId="STT_BLD" enumTypeId="ScreenThemeType"/>

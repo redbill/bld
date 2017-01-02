@@ -30,8 +30,9 @@ along with this software (see the LICENSE.md file). If not, see
         // Font Awesome
         html_stylesheets.add('/lib/font-awesome/css/font-awesome.min.css')
         // Bootstrap
-        html_scripts.add('/lib/bootstrap/bootstrap.min.js')
-        html_stylesheets.add('/lib/bootstrap/bootstrap.min.css')
+        html_scripts.add('/bld/bootstrap-3.3.0/js/bootstrap.min.js')
+        html_stylesheets.add('/bld/bootstrap-3.3.0/css/bootstrap.min.css')
+        html_stylesheets.add('/bld/bootstrap-3.3.0/css/bootstrap-theme.min.css')
 
         // Form Validation and AJAX (jquery-validation, jquery-form)
         html_scripts.add('/lib/jquery-validation/jquery.validate.min.js')
@@ -122,10 +123,8 @@ along with this software (see the LICENSE.md file). If not, see
                             }
                         </style>
                         <div class="nav nav-pills row"  align="center">
-                               
-                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">关注</a> 
-                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld").url}">首页</a> 
-                                <a class="col-md-4 col-sm-4 col-xs-4"  href="${sri.buildUrl("/bld/My").url}">我的</a> 
+                                <a class="col-md-6 col-sm-6 col-xs-6"  href="${sri.buildUrl("/bld").url}">首页</a> 
+                                <a class="col-md-6 col-sm-6 col-xs-6"  href="${sri.buildUrl("/bld/My").url}">我的</a> 
                         </div>
 				
 				

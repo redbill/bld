@@ -45,7 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
 				  
 				  <div class="row" style="height:30px">
 				  	<div class=" col-xs-12">
-				      	<a class="btn  btn-primary " href="/bld/addTeam"  style="width:40%; display: block;  margin-left: auto; margin-right: auto;">增加团队</a>
+				      	<a class="btn  btn-primary " href="/bld/addTeam"  style="width:40%; display: block;  margin-left: auto; margin-right: auto;">新增团队</a>
 				    </div>
 				 </div> 
            ]]></text></render-mode>

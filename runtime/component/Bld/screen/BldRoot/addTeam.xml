@@ -16,39 +16,68 @@ along with this software (see the LICENSE.md file). If not, see
         xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.0.xsd"
         require-authentication="true">
 
-	 <pre-actions>
+	<transition name="addTeam.json">
+        <service-call name="Bld.team.TeamServices.add#Team"  in-map="ec.web.parameters"  web-send-json-response="true"/>
+        <default-response type="none"/>
+    </transition>
+    
+	<pre-actions>
         <set field="html_title" value="增加团队  "/>
     </pre-actions>
     <actions>
-        
+        <script>footer_scripts.add("/bld/js/addTeam.js")</script>
     </actions>
     <widgets>
+    
         <render-mode><text type="html" ><![CDATA[
-      
-				<form  role="form">
-				  <div class="form-group">
-				    <label for="teamName">团队名称</label>
-				    <input type="text" class="form-control" id="teamName" placeholder="请输入团队名称">
+		<div class="row">
+  			<div class="col-xs-12" id="teamInfo">
+
+				  <div class="row">
+				  	 <div class="col-xs-12">
+				   		 <label for="teamName">团队名称</label>
+				     </div>
+			      </div>
+			    
+			       <div class="row">
+			        <div class="col-xs-12">
+				    	<input v-model="teamName" type="text" style="width:100%; display: block;  margin-left: auto; margin-right: auto;" id="teamName" placeholder="请输入团队名称">
+				     </div>
 				  </div>
 				  
-				  <div class="form-group">
-				    <label for="teamDesc">团队简介</label>
-				    <textarea rows="6" class="form-control" id="teamDesc" placeholder="请输入团队简介"></textarea>
-				     <p class="help-block">主要内容包括该团队为哪些人或机构解决了什么问题，字数不得超过50个字。</p>
+				  <div class="row">
+				  	 <div class="col-xs-12">
+				    	<label for="teamDesc">团队简介</label>
+				     </div>
+			     </div>
+			    
+			       <div class="row">
+				  	 <div class="col-xs-12">
+				    <textarea v-model="teamDesc" rows="5" style="width:100%; display: block;  margin-left: auto; margin-right: auto;"  id="teamDesc" placeholder="可以为哪些人或机构解决了什么问题、提供什么服务、存在什么价值，字数不得超过50个字。"></textarea>
+				  	</div>
 				  </div>
 				  
-				  <div class="form-group">
-				    <label for="contactDesc">联系方式</label>
-				    <textarea rows="3" class="form-control" id="contactDesc" placeholder="请输入联系方式"></textarea>
-				     <p class="help-block">可以是电话号码、官网、邮箱、实体所在地址等。</p>
+				  <div class="row">
+				  	 <div class="col-xs-12">
+				    	<label for="contactDesc">联系方式</label>
+			     	</div>
+			     </div>
+			    
+			      <div class="row">
+				  	 <div class="col-xs-12">
+				   	 	<textarea v-model="contactDesc" rows="3" style="width:100%; display: block;  margin-left: auto; margin-right: auto;"  id="contactDesc" placeholder="可以是电话号码、官网、邮箱、实体所在地址等。"></textarea>
+				  	</div>
 				  </div>
 				  
+				  <div class="row">
+				  	 <div class="col-xs-12">
+					  <button v-on:click="addTeam" class="btn btn-primary " style="width:40%; display: block;  margin-left: auto; margin-right: auto;">新增</button>
+				    </div>
+				  </div> 
 				 
-					  <button type="submit" class="btn btn-primary" >新增</button>
-				   
-				  
-				</form> 
-				
+			 </div>
+		  </div> 
+				 	
            ]]></text></render-mode>
     </widgets>
 </screen>

@@ -51,6 +51,9 @@ along with this software (see the LICENSE.md file). If not, see
         html_stylesheets.add('/lib/jstree/themes/default/style.min.css')
         // Inline Editable
         html_scripts.add('/lib/jeditable/jquery.jeditable.min.js')
+        
+        html_scripts.add('/bld/js/vue.js')
+        html_scripts.add('/bld/js/vue-resource.min.js')
 
         // Moqui webroot layout
         html_stylesheets.add('/css/webroot-layout.css')
@@ -131,7 +134,9 @@ along with this software (see the LICENSE.md file). If not, see
 				
 				  </div> <!-- container-fluid -->
 				</nav><!-- /.navbar -->
-              
+              <script>
+              	var sessionToken = '${ec.web.sessionToken}';
+              </script>
               
             ]]></text></render-mode>
         </container>
